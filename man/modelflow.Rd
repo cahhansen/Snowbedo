@@ -11,7 +11,9 @@ modelflow(data, meltcoefficient, runoffcoefficient, area)
 
 \item{meltcoefficient}{(melt factor*snow runoff coefficient*radiation coefficient)}
 
-\item{area}{of watershed in Km2}
+\item{runoffcoefficient}{(between 0-1)}
+
+\item{area}{Area of watershed in Km2}
 }
 \value{
 vector of modeled flow

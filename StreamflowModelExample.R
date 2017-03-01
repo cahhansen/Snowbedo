@@ -2,6 +2,8 @@ library(ggplot2)
 library(Snowbedo)
 
 #Read in data with all necessary parameters (and if needed, combine into a single data.frame)
+#Parameters include: shortwave radiation, precipitation (daily or accumulative), percent of watershed covered in snow,
+#average albedo in the watershed
 data=read.csv('City.csv')
 
 #Formatting
@@ -16,17 +18,16 @@ completedata$precip_daily=dissipate(data=completedata$precip_accum)
 
 #Set value for m (melt factor*snow runoff coefficient*radiation coefficient). This is basin-specific, and can be
 #optimized by finding the m which results in the minimum error between modeled and observed streamflow
-
 m=0.001
 
 #Set value for c (precipitation runoff coefficient)
-
 c=0.5
 
 #Define area of watershed in km2
 area=100
 
 #Streamflow model
+completedata$predflow=modelflow(data=completedata,meltcoefficient=m,runoffcoefficient=c,area=100)
 
 #Set condition so that c=0 when precip is snow (depends on some threshold of average temperature)
 
