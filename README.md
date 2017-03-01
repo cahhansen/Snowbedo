@@ -10,3 +10,6 @@ then be used to explore various scenarios of albedo (which may be influenced by 
 ### Formatting data
 - limitperiod.R (limits data to specific time period)
 - dissipate.R (calculates daily precipitation from accumulative precipitation)
+
+### Modeling streamflow
+- modelflow.R (calculates flow based on meteorological and remotely sensed land cover parameters)
