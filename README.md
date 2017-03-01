@@ -7,4 +7,6 @@ then be used to explore various scenarios of albedo (which may be influenced by 
 
 
 ## Functions
-This package contains a number of functions for formatting data
+### Formatting data
+- limitperiod.R (limits data to specific time period)
+- dissipate.R (calculates daily precipitation from accumulative precipitation)
