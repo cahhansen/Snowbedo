@@ -1,14 +1,13 @@
-path='changethis'
-setwd(path)
+
 data=read.csv('City.csv')
 
 #Formatting
 #Convert the shortwave radiation from W/m2/day to Wh/m2/day
 data$solar_short_Whm2day=data$solar_short*24
-data$date=as.Date(data$date,format="%m/%d/%Y")
+
 
 #Limit dataset to dates with common data
-data=data[(data$date>="2000-03-01" & data$date<="2014-11-11"),]
+completedata=limitperiod(data,begin="2000-03-01",end="2014-11-11")
 
 #Calculate the daily precipitation
 
