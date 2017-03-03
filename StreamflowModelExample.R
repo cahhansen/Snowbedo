@@ -2,7 +2,7 @@ library(ggplot2)
 library(Snowbedo)
 
 #Read in data with all necessary parameters (and if needed, combine into a single data.frame)
-data=read.csv('City.csv')
+data=citycreekdata
 
 #Formatting---------------------------------------------------------------------------------------------------------
 #Convert the shortwave radiation from W/m2/day to Wh/m2/day

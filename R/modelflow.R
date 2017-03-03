@@ -9,9 +9,13 @@
 #' @return vector of modeled flow
 
 modelflow=function(data,meltcoefficient,runoffcoefficient,area,baseflow){
-  snowmelt=ifelse((data$tmin>0),((meltcoefficient*data$solar_short_Whm2day)*(1-data$albedo)*(data$tavg-0)),0)
+  #Snowmelt process
+  snowmelt=ifelse((data$tavg>0),((meltcoefficient*data$solar_short_Whm2day)*(1-data$albedo)*(data$tavg-0)),0)
+  #Rainfall-runoff process
   runoff = ifelse((data$tavg>0),runoffcoefficient*data$precip_daily,0)
+  #Discharge
   discharge=((snowmelt*data$snowcover)+runoff)*area*(10000/86400)+baseflow
+  #Routed discharge
   return(discharge)
 }
 

@@ -19,3 +19,4 @@ data.frame that is limited to the time period between begin and end
 \description{
 Limits data to specified time period
 }
+

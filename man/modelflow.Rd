@@ -4,7 +4,7 @@
 \alias{modelflow}
 \title{Calculates a modeled streamflow}
 \usage{
-modelflow(data, meltcoefficient, runoffcoefficient, area)
+modelflow(data, meltcoefficient, runoffcoefficient, area, baseflow)
 }
 \arguments{
 \item{data}{A data frame with a shortwave radiation, albedo, average temperature, percent snowcover, and precipitation}
@@ -14,6 +14,8 @@ modelflow(data, meltcoefficient, runoffcoefficient, area)
 \item{runoffcoefficient}{(between 0-1)}
 
 \item{area}{Area of watershed in Km2}
+
+\item{baseflow}{Discharge in cms}
 }
 \value{
 vector of modeled flow
@@ -21,3 +23,4 @@ vector of modeled flow
 \description{
 Calculates a modeled streamflow
 }
+

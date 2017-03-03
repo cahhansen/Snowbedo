@@ -1,6 +1,7 @@
 Package: Snowbedo
 Type: Package
-Title: Uses remote sensing and stream gauge data to develop a model of albedo/temperature/radiation-based streamflow
+Title: Uses remote sensing and stream gauge data to develop a model of albedo/
+    temperature/radiation-based streamflow
 Version: 0.1
 Date: 2017-01-03
 Author: Carly Hansen
@@ -8,4 +9,4 @@ Maintainer: Who to complain to <carly.hansen@utah.edu>
 Description: Coming soon
 License: What license is it under?
 LazyData: TRUE
-RoxygenNote: 6.0.1
+RoxygenNote: 5.0.0
