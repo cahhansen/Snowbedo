@@ -53,7 +53,10 @@ base=baseflows(flowts, n.reflected = 30, ts = "mean")
 b=base$mean.bf
 #--------------------------------------------------------------------------------------------------------------------
 #Streamflow model
-data$predflow=modelflow(data=data,meltcoefficient=m,runoffcoefficient=c,area=area,baseflow=b)
+modelresults=modelflow(data=data,meltcoefficient=m,runoffcoefficient=c,area=area,baseflow=b)
+data$predflow=modelresults[[3]]
+data$snowmelt=modelresults[[1]]
+data$runoff=modelresults[[2]]
 summary(data$flow)
 summary(data$predflow)
 
@@ -61,9 +64,12 @@ plotobs=ggplot(data=data)+geom_point(aes(x=date,y=flow))+ggtitle("Observed Strea
 plotmodel=ggplot(data=data)+geom_point(aes(x=date,y=predflow))+ggtitle("Modeled Streamflow")
 plotprecip=ggplot(data=data)+geom_point(aes(x=date,y=precip_accum))+ggtitle("Precipitation")
 plotsnow=ggplot(data=data)+geom_point(aes(x=date,y=snowcover))+ggtitle("Snowcover")
+plotsnowmelt=ggplot(data=data)+geom_point(aes(x=date,y=snowmelt))+ggtitle("Snowmelt")
 grid.arrange(plotobs,plotmodel,ncol=1)
 grid.arrange(plotobs,plotprecip,ncol=1)
 grid.arrange(plotobs,plotsnow,ncol=1)
+grid.arrange(plotmodel,plotsnow,ncol=1)
+grid.arrange(plotobs,plotmodel,plotsnowmelt,plotsnow,plotprecip,ncol=1)
 
 ggplot(data=data)+
   geom_point(aes(x=date,y=flow,colour="Observed"))+
@@ -71,10 +77,32 @@ ggplot(data=data)+
   scale_colour_manual("",
                       breaks = c("Observed","Modeled"),
                       values = c("#cc0000","#000099"))
+ggplot(data=data)+
+  geom_point(aes(x=date,y=predflow,colour="Modeled"))+
+  geom_point(aes(x=date,y=flow,colour="Observed"))+
+  geom_point(aes(x=date,y=snowcover,colour="Snowcover"))+
+  scale_colour_manual("",
+                      breaks = c("Snowcover","Modeled","Observed"),
+                      values = c("#cc0000","#000000","#000099"))
 
-modelperform=lm(completedata$flow~completedata$predflow)
+modelperform=lm(data$flow~data$predflow)
 rmse <- function(error)
 {
   sqrt(mean(error^2))
 }
 rmse(modelperform$residuals)
+
+#Look at peaks
+data$Year=year(data$date)
+data$DOY=yday(data$date)
+peaks=data.frame(Year=seq(min(data$Year)+1,max(data$Year)))
+for (i in seq(min(data$Year)+1,max(data$Year))){
+  streamsub=na.omit(data[(data$Year==i),])
+  peak=streamsub[(streamsub$flow==max(streamsub$flow)),"DOY"]
+  peakmod=streamsub[(streamsub$predflow==max(streamsub$predflow)),"DOY"]
+  peaks[(i-(min(data$Year))),"obs"]=peak
+  peaks[(i-(min(data$Year))),"mod"]=peakmod
+}
+peaks$Diff=peaks$obs-peaks$mod
+avgdiff=mean(peaks$Diff)
+summary(peaks$Diff)
