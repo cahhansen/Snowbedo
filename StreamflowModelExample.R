@@ -6,7 +6,7 @@ library(hydrostats)
 library(gridExtra)
 
 #Read in data with all necessary parameters (and if needed, combine into a single data.frame)
-load('data/citycreekdata.RData')
+#load('data/citycreekdata.RData')
 
 data=read.csv('BigCottonwood.csv')
 
