@@ -14,7 +14,7 @@ modelflow=function(data,meltcoefficient,runoffcoefficient,area,baseflow){
   #Rainfall-runoff process
   runoff = ifelse((data$tavg>0),runoffcoefficient*data$precip_daily,0)
   #Discharge
-  discharge=((snowmelt*data$snowcover)+runoff)*area*(10000/86400)+baseflow
+  discharge=((snowmelt*data$cloudfreesnowcover))*area*(10000/86400)+baseflow
   #Routed discharge
   return(list(snowmelt,runoff,discharge))
 }

@@ -13,12 +13,20 @@ data=read.csv('BigCottonwood.csv')
 #Limit dataset to dates with common data
 data=limitperiod(data=data,begin="2000-09-30",end="2011-10-01")
 
+#Examine the autocorrelation
+acf(data$flow)
+pacf(data$flow)
+
 #Formatting---------------------------------------------------------------------------------------------------------
 #Convert the shortwave radiation from W/m2/day to Wh/m2/day
 data$solar_short_Whm2day=data$solar_short*24
 
 #Convert snowcover to a percentage (0-1)
 data$snowcover=data$snowcover/100
+#Interpolate snowcover data for "cloud free" conditions
+data$cloudfreesnowcover=data$snowcover
+data[(data$cloudcover>25),"cloudfreesnowcover"]=NA
+data$cloudfreesnowcover=na.interpolation(data$cloudfreesnowcover,option="linear")
 
 #Calculate the daily precipitation in cm/day
 data$precip_daily=dissipate(data=data$precip_accum)
@@ -41,7 +49,7 @@ data$tavg=na.interpolation(data$tavg,option='linear')
 m=0.00001
 
 #Set value for c (precipitation runoff coefficient)
-c=0.5
+c=0.55
 
 #Define area of watershed in km2
 area=129.2
@@ -106,3 +114,7 @@ for (i in seq(min(data$Year)+1,max(data$Year))){
 peaks$Diff=peaks$obs-peaks$mod
 avgdiff=mean(peaks$Diff)
 summary(peaks$Diff)
+
+
+#-------------------------------------------------------------------------------------------------------
+
