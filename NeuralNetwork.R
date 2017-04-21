@@ -1,12 +1,10 @@
-library(randomForest)
-library(ggplot2)
 library(Snowbedo)
 library(imputeTS)
 library(caret)
+library(ggplot2)
+library(neuralnet)
 
 #Read in data with all necessary parameters (and if needed, combine into a single data.frame)
-#load('data/citycreekdata.RData')
-
 data=read.csv('BigCottonwood.csv')
 
 #Limit dataset to dates with common data
@@ -41,34 +39,53 @@ data$tobs=na.interpolation(data$tobs,option='linear')
 data$tavg=na.interpolation(data$tavg,option='linear')
 
 lagpad <- function(x, k) {
-  c(rep(NA, k), x)[1 : length(x)]
+  c(rep(0, k), x)[1 : length(x)]
 }
 
 #Lag precip_daily
 data$lagprecip_daily=lagpad(data$precip_daily,1)
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
-variables_list=c('flow','precip_daily','tavg','albedo','solar_short_Whm2day','cloudfreesnowcover','lagprecip_daily')
+variables_list=c('flow','lagprecip_daily','tavg','tmax','tmin','albedo','solar_short_Whm2day','cloudfreesnowcover')
 
 
 #Create subset of parleys_data based on list of variables
-watershed_data=data[ , which(names(data) %in% variables_list)]
+sub_data=data[ , which(names(data) %in% variables_list)]
 
-#Random Forest
+
+#Normalize the data
+maxs = apply(sub_data,2,max)
+mins = apply(sub_data,2,min)
+
+norm_data = as.data.frame(scale(sub_data,center=mins, scale=maxs-mins))
+
+index <- sample(1:nrow(norm_data),round(0.75*nrow(norm_data)))
+train_ = norm_data[index,]
+test_ = norm_data[-index,]
+
+#Neural Network
 set.seed(1)
-fitFull.rf <- train(flow~., data=watershed_data, method="rf")
-rf.results=fitFull.rf$finalModel
-rf.predflow=rf.results$predicted
-data$predflow=rf.predflow
+n = names(train_)
 
-plotobs=ggplot(data=data)+geom_point(aes(x=date,y=flow))+ggtitle("Observed Streamflow")
-plotmodel=ggplot(data=data)+geom_point(aes(x=date,y=predflow))+ggtitle("Modeled Streamflow")
-grid.arrange(plotobs,plotmodel,ncol=1)
-summary(data$flow)
-summary(data$predflow)
+#First create the formula which will be passed to the neuralnet fitting function
+f=as.formula(paste("flow~",paste(n[!n %in% "flow"], collapse = "+")))
 
+#Specify the number of neurons for each of the hidden layers using "hidden"
+#Specify whether to do regression (linear.output=TRUE) or classification (linear.output=FALSE)
+nn = neuralnet(f,data=train_,hidden=c(5,3),linear.output=T)
 
+#Plot the nn structure
+plot(nn)
 
-#SVM (Support Vector Machine)
-set.seed(1)
-fitFull.svmRadial <- train(flow~., data=watershed_data, method="svmRadial")
+#Predict using the nn
+pr.nn = compute(nn,test_[,c(1,3,4,5,6,7)])
+pr.nn_ = pr.nn$net.result*(max(sub_data$flow)-min(sub_data$flow))+min(sub_data$flow)
+test.r = (test_$flow)*(max(sub_data$flow)-min(sub_data$flow))+min(sub_data$flow)
+
+MSE.nn = sum((test.r - pr.nn_)^2)/nrow(test_)
+print(paste("MSE: ",MSE.nn))
+
+plot(test.r,pr.nn_,col='red',main='Real vs predicted NN',pch=18,cex=0.7)
+abline(0,1,lwd=2)
+legend('bottomright',legend='NN',pch=18,col='red', bty='n')
+

@@ -1,20 +1,14 @@
-library(randomForest)
-library(ggplot2)
 library(Snowbedo)
 library(imputeTS)
-library(caret)
+library(ggplot2)
+
 
 #Read in data with all necessary parameters (and if needed, combine into a single data.frame)
-#load('data/citycreekdata.RData')
-
 data=read.csv('BigCottonwood.csv')
 
 #Limit dataset to dates with common data
 data=limitperiod(data=data,begin="2000-09-30",end="2011-10-01")
 
-#Examine the autocorrelation
-acf(data$flow)
-pacf(data$flow)
 
 #Formatting---------------------------------------------------------------------------------------------------------
 #Convert the shortwave radiation from W/m2/day to Wh/m2/day
@@ -41,34 +35,17 @@ data$tobs=na.interpolation(data$tobs,option='linear')
 data$tavg=na.interpolation(data$tavg,option='linear')
 
 lagpad <- function(x, k) {
-  c(rep(NA, k), x)[1 : length(x)]
+  c(rep(0, k), x)[1 : length(x)]
 }
 
-#Lag precip_daily
-data$lagprecip_daily=lagpad(data$precip_daily,1)
+#Lag flow
+data$lagflow=lagpad(data$flow,1)
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
-variables_list=c('flow','precip_daily','tavg','albedo','solar_short_Whm2day','cloudfreesnowcover','lagprecip_daily')
 
+ggplot(data)+geom_line(aes(x=date,y=flow))
 
-#Create subset of parleys_data based on list of variables
-watershed_data=data[ , which(names(data) %in% variables_list)]
-
-#Random Forest
-set.seed(1)
-fitFull.rf <- train(flow~., data=watershed_data, method="rf")
-rf.results=fitFull.rf$finalModel
-rf.predflow=rf.results$predicted
-data$predflow=rf.predflow
-
-plotobs=ggplot(data=data)+geom_point(aes(x=date,y=flow))+ggtitle("Observed Streamflow")
-plotmodel=ggplot(data=data)+geom_point(aes(x=date,y=predflow))+ggtitle("Modeled Streamflow")
-grid.arrange(plotobs,plotmodel,ncol=1)
-summary(data$flow)
-summary(data$predflow)
-
-
-
-#SVM (Support Vector Machine)
-set.seed(1)
-fitFull.svmRadial <- train(flow~., data=watershed_data, method="svmRadial")
+model=lm(lagflow~tavg+albedo+cloudfreesnowcover+solar_short_Whm2day+precip_daily,data=data)
+summary(model)
+pr.flow=model$fitted.values
+ggplot()+geom_point(aes(x=data$flow,y=pr.flow))
