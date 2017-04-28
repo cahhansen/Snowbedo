@@ -14,7 +14,6 @@ data=limitperiod(data=data,begin="2000-09-30",end="2011-10-01")
 
 #Examine the autocorrelation
 acf(data$flow)
-pacf(data$flow)
 
 #Formatting---------------------------------------------------------------------------------------------------------
 #Convert the shortwave radiation from W/m2/day to Wh/m2/day
@@ -41,7 +40,7 @@ data$tobs=na.interpolation(data$tobs,option='linear')
 data$tavg=na.interpolation(data$tavg,option='linear')
 
 lagpad <- function(x, k) {
-  c(rep(NA, k), x)[1 : length(x)]
+  c(rep(0, k), x)[1 : length(x)]
 }
 
 #Lag precip_daily
@@ -66,9 +65,3 @@ plotmodel=ggplot(data=data)+geom_point(aes(x=date,y=predflow))+ggtitle("Modeled 
 grid.arrange(plotobs,plotmodel,ncol=1)
 summary(data$flow)
 summary(data$predflow)
-
-
-
-#SVM (Support Vector Machine)
-set.seed(1)
-fitFull.svmRadial <- train(flow~., data=watershed_data, method="svmRadial")
