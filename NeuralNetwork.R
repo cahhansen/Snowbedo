@@ -8,45 +8,10 @@ library(neuralnet)
 data=read.csv('BigCottonwood.csv')
 
 #Limit dataset to dates with common data
-data=limitperiod(data=data,begin="2000-09-30",end="2011-10-01")
-
-#Examine the autocorrelation
-acf(data$flow)
-pacf(data$flow)
-
-#Formatting---------------------------------------------------------------------------------------------------------
-#Convert the shortwave radiation from W/m2/day to Wh/m2/day
-data$solar_short_Whm2day=data$solar_short*24
-
-#Convert snowcover to a percentage (0-1)
-data$snowcover=data$snowcover/100
-#Interpolate snowcover data for "cloud free" conditions
-data$cloudfreesnowcover=data$snowcover
-data[(data$cloudcover>25),"cloudfreesnowcover"]=NA
-data$cloudfreesnowcover=na.interpolation(data$cloudfreesnowcover,option="linear")
-
-#Calculate the daily precipitation in cm/day
-data$precip_daily=dissipate(data=data$precip_accum)
-data$precip_daily=data$precip_daily*0.1
-
-#Convert flow to cms if needed
-data$flow=data$flow*0.0283
-
-#May need to use na.interpolation from imputeTS package if daily values are missing
-data$tmax=na.interpolation(data$tmax,option='linear')
-data$tmin=na.interpolation(data$tmin,option='linear')
-data$tobs=na.interpolation(data$tobs,option='linear')
-data$tavg=na.interpolation(data$tavg,option='linear')
-
-lagpad <- function(x, k) {
-  c(rep(0, k), x)[1 : length(x)]
-}
-
-#Lag precip_daily
-data$lagprecip_daily=lagpad(data$precip_daily,1)
+data=limitperiod(data=data,begin="2004-09-30",end="2011-10-01")
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
-variables_list=c('flow','lagprecip_daily','tavg','tmax','tmin','albedo','solar_short_Whm2day','cloudfreesnowcover')
+variables_list=c('flow','lagprecip_daily','tavg','tmax','tmin','albedo','solar_short_Whm2day','cloudfreesnowcover','snowdepth','swe')
 
 
 #Create subset of parleys_data based on list of variables
@@ -78,14 +43,17 @@ nn = neuralnet(f,data=train_,hidden=c(5,3),linear.output=T)
 plot(nn)
 
 #Predict using the nn
-pr.nn = compute(nn,test_[,c(1,3,4,5,6,7)])
+pr.nn = compute(nn,test_[,n[!n %in% "flow"]])
 pr.nn_ = pr.nn$net.result*(max(sub_data$flow)-min(sub_data$flow))+min(sub_data$flow)
 test.r = (test_$flow)*(max(sub_data$flow)-min(sub_data$flow))+min(sub_data$flow)
 
-MSE.nn = sum((test.r - pr.nn_)^2)/nrow(test_)
-print(paste("MSE: ",MSE.nn))
+RMSE.nn = sqrt(sum((test.r - pr.nn_)^2)/nrow(test_))
+print(paste("RMSE: ",RMSE.nn))
 
 plot(test.r,pr.nn_,col='red',main='Real vs predicted NN',pch=18,cex=0.7)
 abline(0,1,lwd=2)
 legend('bottomright',legend='NN',pch=18,col='red', bty='n')
 
+testdates=data[-index,"date"]
+plot(x=testdates,y=test.r,col=1,type="l",xlab="Date",ylab="Streamflow")
+lines(x=testdates,y=pr.nn_,col=2)
