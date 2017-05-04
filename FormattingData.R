@@ -1,8 +1,13 @@
 library(imputeTS)
+library(Snowbedo)
+library(lubridate)
 
-data=read.csv('BigCottonwood.csv')
+
+watershed="DellCreek"
+data=read.csv(paste0(watershed,'.csv'))
 
 #Formatting---------------------------------------------------------------------------------------------------------
+data$date=as.Date(data$date,format="%m/%d/%Y")
 #Convert the shortwave radiation from W/m2/day to Wh/m2/day
 data$solar_short_Whm2day=data$solar_short*24
 
@@ -10,15 +15,19 @@ data$solar_short_Whm2day=data$solar_short*24
 data$snowcover=data$snowcover/100
 #Interpolate snowcover data for "cloud free" conditions
 data$cloudfreesnowcover=data$snowcover
-data[(data$cloudcover>25),"cloudfreesnowcover"]=NA
+data[(data$cloudcover>25 | is.na(data$cloudcover)),"cloudfreesnowcover"]=NA
 data$cloudfreesnowcover=na.interpolation(data$cloudfreesnowcover,option="linear")
 
 #Calculate the daily precipitation in cm/day
 data$precip_daily=dissipate(data=data$precip_accum)
-data$precip_daily=data$precip_daily*0.1
+
 
 #Convert flow to cms if needed
 data$flow=data$flow*0.0283
+
+#Convert swe and snowdepth to cm
+data$swe=data$swe*2.54
+data$snowdepth=data$snowdepth*2.54
 
 #May need to use na.interpolation from imputeTS package if daily values are missing
 data$tmax=na.interpolation(data$tmax,option='linear')
@@ -43,3 +52,17 @@ data$lagsnowcover=lagpad(data$cloudfreesnowcover,1)
 data$lagsnowdepth=lagpad(data$snowdepth,1)
 
 #Save data
+
+formatteddata=data[,c("date","flow","tmax","tmin","tavg","swe","albedo","solar_short_Whm2day","cloudfreesnowcover","snowdepth","precip_daily",
+                      "lagtmax","lagtmin","lagtavg","lagswe","lagalbedo","lagsolar","lagsnowcover","lagsnowdepth","lagprecip_daily")]
+
+colnames(formatteddata) <- c("Date", "Streamflow","Tmax_C","Tmin_C","Tavg_C","SWE_cm","Albedo","SolarRad_Whm2d","SnowCover",
+                        "SnowDepth_cm","Precip_cm","LagTmax","LagTmin","LagTavg","LagSWE","LagAlbedo","LagSolarRad","LagSnowCover",
+                        "LagSnowDepth","LagPrecip")
+
+
+save(formatteddata,file=paste0("C:/Users/Carly/Desktop/SnowpackModeling/Snowbedo/data/Formatted/",watershed,".RData"))
+formatteddata[is.na(formatteddata)] <- ""
+formatteddata$Month=month(formatteddata$Date)
+write.csv(formatteddata,paste0("C:/Users/Carly/Desktop/SnowpackModeling/",watershed,".csv"))
+
