@@ -3,7 +3,7 @@ library(Snowbedo)
 library(lubridate)
 
 
-watershed="DellCreek"
+watershed="LittleCottonwood"
 data=read.csv(paste0(watershed,'.csv'))
 
 #Formatting---------------------------------------------------------------------------------------------------------
@@ -30,6 +30,7 @@ data$swe=data$swe*2.54
 data$snowdepth=data$snowdepth*2.54
 
 #May need to use na.interpolation from imputeTS package if daily values are missing
+data$flow=na.interpolation(data$flow,option='linear')
 data$tmax=na.interpolation(data$tmax,option='linear')
 data$tmin=na.interpolation(data$tmin,option='linear')
 data$tobs=na.interpolation(data$tobs,option='linear')
@@ -60,7 +61,8 @@ colnames(formatteddata) <- c("Date", "Streamflow","Tmax_C","Tmin_C","Tavg_C","SW
                         "SnowDepth_cm","Precip_cm","LagTmax","LagTmin","LagTavg","LagSWE","LagAlbedo","LagSolarRad","LagSnowCover",
                         "LagSnowDepth","LagPrecip")
 
-
+#Limit dataset to dates with common data
+formatteddata=limitperiod(data=formatteddata,begin="2004-10-01",end="2011-09-30")
 save(formatteddata,file=paste0("C:/Users/Carly/Desktop/SnowpackModeling/Snowbedo/data/Formatted/",watershed,".RData"))
 formatteddata[is.na(formatteddata)] <- ""
 formatteddata$Month=month(formatteddata$Date)
