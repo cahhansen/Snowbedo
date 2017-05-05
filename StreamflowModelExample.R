@@ -6,40 +6,9 @@ library(hydrostats)
 library(gridExtra)
 
 #Read in data with all necessary parameters (and if needed, combine into a single data.frame)
-#load('data/citycreekdata.RData')
 
-data=read.csv('BigCottonwood.csv')
-
-#Limit dataset to dates with common data
-data=limitperiod(data=data,begin="2000-09-30",end="2011-10-01")
-
-#Examine the autocorrelation
-acf(data$flow)
-pacf(data$flow)
-
-#Formatting---------------------------------------------------------------------------------------------------------
-#Convert the shortwave radiation from W/m2/day to Wh/m2/day
-data$solar_short_Whm2day=data$solar_short*24
-
-#Convert snowcover to a percentage (0-1)
-data$snowcover=data$snowcover/100
-#Interpolate snowcover data for "cloud free" conditions
-data$cloudfreesnowcover=data$snowcover
-data[(data$cloudcover>25),"cloudfreesnowcover"]=NA
-data$cloudfreesnowcover=na.interpolation(data$cloudfreesnowcover,option="linear")
-
-#Calculate the daily precipitation in cm/day
-data$precip_daily=dissipate(data=data$precip_accum)
-data$precip_daily=data$precip_daily*0.1
-
-#Convert flow to cms if needed
-data$flow=data$flow*0.0283
-
-#May need to use na.interpolation from imputeTS package if daily values are missing
-data$tmax=na.interpolation(data$tmax,option='linear')
-data$tmin=na.interpolation(data$tmin,option='linear')
-data$tobs=na.interpolation(data$tobs,option='linear')
-data$tavg=na.interpolation(data$tavg,option='linear')
+watershed='BigCottonwood'
+load(paste0('Formatted/',watershed,'.RData'))
 
 #Parameters for model must include: shortwave radiation, precipitation (daily or accumulative),
 #percent of watershed covered in snow, average albedo in the watershed
@@ -56,44 +25,29 @@ area=129.2
 
 #Baseflow (may be determined by the historical record)
 #Calculate average annual minimum
-flowts=ts.format(data, format="%Y-%m-%d", cols=c(1,10))
-base=baseflows(flowts, n.reflected = 30, ts = "mean")
+flowts=ts.format(formatteddata, format="%Y-%m-%d", cols=c(1,2))
+base=baseflows(flowts, n.reflected = 7, ts = "mean")
 b=base$mean.bf
 #--------------------------------------------------------------------------------------------------------------------
 #Streamflow model
-modelresults=modelflow(data=data,meltcoefficient=m,runoffcoefficient=c,area=area,baseflow=b)
-data$predflow=modelresults[[3]]
-data$snowmelt=modelresults[[1]]
-data$runoff=modelresults[[2]]
-summary(data$flow)
-summary(data$predflow)
+modelresults=modelflow(data=formatteddata,meltcoefficient=m,runoffcoefficient=c,area=area,baseflow=b)
+modeleddata=data.frame(Date=formatteddata$Date,Streamflow=formatteddata$Streamflow,predflow=modelresults[[3]],snowmelt=modelresults[[1]],runoff=modelresults[[2]])
+summary(formatteddata$Streamflow)
+summary(modeleddata$predflow)
 
-plotobs=ggplot(data=data)+geom_point(aes(x=date,y=flow))+ggtitle("Observed Streamflow")
-plotmodel=ggplot(data=data)+geom_point(aes(x=date,y=predflow))+ggtitle("Modeled Streamflow")
-plotprecip=ggplot(data=data)+geom_point(aes(x=date,y=precip_accum))+ggtitle("Precipitation")
-plotsnow=ggplot(data=data)+geom_point(aes(x=date,y=snowcover))+ggtitle("Snowcover")
-plotsnowmelt=ggplot(data=data)+geom_point(aes(x=date,y=snowmelt))+ggtitle("Snowmelt")
+plotobs=ggplot(data=formatteddata)+geom_point(aes(x=Date,y=Streamflow))+ggtitle("Observed Streamflow")
+plotmodel=ggplot(data=modeleddata)+geom_point(aes(x=Date,y=predflow))+ggtitle("Modeled Streamflow")
 grid.arrange(plotobs,plotmodel,ncol=1)
-grid.arrange(plotobs,plotprecip,ncol=1)
-grid.arrange(plotobs,plotsnow,ncol=1)
-grid.arrange(plotmodel,plotsnow,ncol=1)
 grid.arrange(plotobs,plotmodel,plotsnowmelt,plotsnow,plotprecip,ncol=1)
 
-ggplot(data=data)+
-  geom_point(aes(x=date,y=flow,colour="Observed"))+
-  geom_point(aes(x=date,y=predflow,colour="Modeled"))+
+ggplot(data=modeleddata)+
+  geom_point(aes(x=Date,y=Streamflow,colour="Observed"))+
+  geom_point(aes(x=Date,y=predflow,colour="Modeled"))+
   scale_colour_manual("",
                       breaks = c("Observed","Modeled"),
                       values = c("#cc0000","#000099"))
-ggplot(data=data)+
-  geom_point(aes(x=date,y=predflow,colour="Modeled"))+
-  geom_point(aes(x=date,y=flow,colour="Observed"))+
-  geom_point(aes(x=date,y=snowcover,colour="Snowcover"))+
-  scale_colour_manual("",
-                      breaks = c("Snowcover","Modeled","Observed"),
-                      values = c("#cc0000","#000000","#000099"))
 
-modelperform=lm(data$flow~data$predflow)
+modelperform=lm(modeleddata$Streamflow~modeleddata$predflow)
 rmse <- function(error)
 {
   sqrt(mean(error^2))
