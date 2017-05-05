@@ -7,7 +7,6 @@
 #'
 
 limitperiod = function(data,begin,end){
-  data$date=as.Date(data$date,format="%m/%d/%Y")
-  data=data[(data$date>=begin & data$date<=end),]
+  data=data[(data$Date>=begin & data$Date<=end),]
   return(data)
 }
