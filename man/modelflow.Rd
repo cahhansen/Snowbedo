@@ -23,3 +23,4 @@ vector of modeled flow
 \description{
 Calculates a modeled streamflow
 }
+
