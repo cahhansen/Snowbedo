@@ -10,11 +10,11 @@
 
 modelflow=function(data,meltcoefficient,runoffcoefficient,area,baseflow){
   #Snowmelt process
-  snowmelt=ifelse((data$tavg>0),((meltcoefficient*data$solar_short_Whm2day)*(1-data$albedo)*(data$tmax-0)),0)
+  snowmelt=ifelse((data$Tavg_C>0),((meltcoefficient*data$SolarRad_Whm2d)*(1-data$Albedo)*(data$Tmax_C-0)),0)
   #Rainfall-runoff process
-  runoff = ifelse((data$tavg>0),runoffcoefficient*data$precip_daily,0)
+  runoff = ifelse((data$Tavg_C>0),runoffcoefficient*data$Precip_cm,0)
   #Discharge
-  discharge=((snowmelt*data$cloudfreesnowcover))*area*(10000/86400)+baseflow
+  discharge=((snowmelt*data$SnowCover))*area*(10000/86400)+baseflow
   #Routed discharge
   return(list(snowmelt,runoff,discharge))
 }
