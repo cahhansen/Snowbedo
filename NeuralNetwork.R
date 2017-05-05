@@ -3,19 +3,21 @@ library(imputeTS)
 library(caret)
 library(ggplot2)
 library(neuralnet)
+
 watershed='BigCottonwood'
 
 #Read in data with all necessary parameters (and if needed, combine into a single data.frame)
 load(paste0('Formatted/',watershed,'.RData'))
 data=formatteddata
-#Limit dataset to dates with common data
-data=limitperiod(data=data,begin="2004-10-01",end="2011-09-30")
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
-variables_list=c('Streamflow','Tmax_C','Tmin_C','Tavg_C','Albedo','SolarRad_Whm2d','SnowCover','SnowDepth_cm','Precip_cm')
+#variables_list=c('Streamflow','Tmax_C','Tmin_C','Albedo','SolarRad_Whm2d','SnowCover','SnowDepth_cm','Precip_cm')
+variables_list=c('Streamflow','Tmax_C','Albedo','SnowDepth_cm','SolarRad_Whm2d','Precip_cm')
 
 #Create subset of parleys_data based on list of variables
 sub_data=data[ , which(names(data) %in% variables_list)]
+
+
 
 #Normalize the data
 maxs = apply(sub_data,2,max)
@@ -33,7 +35,7 @@ n = names(train_)
 f=as.formula(paste("Streamflow~",paste(n[!n %in% "Streamflow"], collapse = "+")))
 #Specify the number of neurons for each of the hidden layers using "hidden"
 #Specify whether to do regression (linear.output=TRUE) or classification (linear.output=FALSE)
-nn = neuralnet(f,data=train_,hidden=c(5),linear.output=T)
+nn = neuralnet(f,data=train_,hidden=c(2),linear.output=T,threshold=0.05)
 
 
 #Plot the nn structure
@@ -62,12 +64,14 @@ comparisondf=data.frame(Date=comparisondates,Predicted=comparisonvalues,Actual=a
 comparisondf=comparisondf[order(comparisondf$Date),]
 
 
-with(comparisondf,plot(Actual,Predicted,col='red',main='Actual vs Predicted Streamflow',pch=18,cex=0.7))
-abline(0,1,lwd=2)
+#with(comparisondf,plot(Actual,Predicted,col='red',main='Actual vs Predicted Streamflow',pch=18,cex=0.7))
+#abline(0,1,lwd=2)
 
 with(comparisondf,plot(x=Date,y=Actual,col=1,type="l",xlab="Date",ylab="Streamflow",ylim=c(0,max(Actual)*1.25)))
 with(comparisondf,lines(x=Date,y=Predicted,col=2))
 legend("topright",c('Actual','Predicted'),lty=c(1,1),lwd=c(1,1),col=c(1,2))
 
 #Save the NN model (can be used to model future scenarios)
-save(nn, file = paste0(watershed,"nn.rda"))
+save(nn, file = paste0(watershed,"nn2.rda"))
+
+
