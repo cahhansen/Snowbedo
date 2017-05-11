@@ -15,10 +15,10 @@ load(paste0('Formatted/',watershed,'.RData'))
 #-------------------------------------------------------------------------------------------------------------------
 #Set value for m (melt factor*snow runoff coefficient*radiation coefficient). This is basin-specific, and can be
 #optimized by finding the m which results in the minimum error between modeled and observed streamflow
-m=0.00001
+m=0.000012
 
 #Set value for c (precipitation runoff coefficient)
-c=0.55
+c=0.50
 
 #Define area of watershed in km2
 area=129.2
@@ -38,7 +38,7 @@ summary(modeleddata$predflow)
 plotobs=ggplot(data=formatteddata)+geom_point(aes(x=Date,y=Streamflow))+ggtitle("Observed Streamflow")
 plotmodel=ggplot(data=modeleddata)+geom_point(aes(x=Date,y=predflow))+ggtitle("Modeled Streamflow")
 grid.arrange(plotobs,plotmodel,ncol=1)
-grid.arrange(plotobs,plotmodel,plotsnowmelt,plotsnow,plotprecip,ncol=1)
+
 
 ggplot(data=modeleddata)+
   geom_point(aes(x=Date,y=Streamflow,colour="Observed"))+
@@ -55,15 +55,15 @@ rmse <- function(error)
 rmse(modelperform$residuals)
 
 #Look at peaks
-data$Year=year(data$date)
-data$DOY=yday(data$date)
-peaks=data.frame(Year=seq(min(data$Year)+1,max(data$Year)))
+modeleddata$Year=year(modeleddata$Date)
+modeleddata$DOY=yday(modeleddata$Date)
+peaks=data.frame(Year=seq(min(modeleddata$Year)+1,max(modeleddata$Year)))
 for (i in seq(min(data$Year)+1,max(data$Year))){
-  streamsub=na.omit(data[(data$Year==i),])
-  peak=streamsub[(streamsub$flow==max(streamsub$flow)),"DOY"]
+  streamsub=na.omit(modeleddata[(modeleddata$Year==i),])
+  peak=streamsub[(streamsub$Streamflow==max(streamsub$Streamflow)),"DOY"]
   peakmod=streamsub[(streamsub$predflow==max(streamsub$predflow)),"DOY"]
-  peaks[(i-(min(data$Year))),"obs"]=peak
-  peaks[(i-(min(data$Year))),"mod"]=peakmod
+  peaks[(i-(min(modeleddata$Year))),"obs"]=peak
+  peaks[(i-(min(modeleddata$Year))),"mod"]=peakmod
 }
 peaks$Diff=peaks$obs-peaks$mod
 avgdiff=mean(peaks$Diff)
