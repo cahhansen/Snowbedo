@@ -15,4 +15,3 @@ A vector of daily precipitation
 \description{
 Calculates daily precipitation from accumulative precipitation
 }
-
