@@ -2,12 +2,12 @@
 library(hydrostats)
 library(neuralnet)
 #Load Data
-watershed="DellCreek"
+watershed="BigCottonwood"
 load(paste0('Formatted/',watershed,".RData"))
 load(paste0(watershed,'nn.rda'))
 variables_list=c('Streamflow','Tmax_C','Tmin_C','Albedo','SnowCover','SnowDepth_cm','SolarRad_Whm2d','Precip_cm')
 
-#Create subset of parleys_data based on list of variables
+#Create subset of the dataset based on list of variables
 sub_data=formatteddata[ , which(names(formatteddata) %in% variables_list)]
 
 #Normalize data
