@@ -11,8 +11,8 @@ load(paste0('Formatted/',watershed,'.RData'))
 data=formatteddata
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
-#variables_list=c('Streamflow','Tmax_C','Tmin_C','Albedo','SolarRad_Whm2d','SnowCover','SnowDepth_cm','Precip_cm')
-variables_list=c('Streamflow','Tmax_C','Albedo','SnowDepth_cm','SolarRad_Whm2d','Precip_cm')
+variables_list=c('Streamflow','Tmax_C','Tmin_C','Albedo','SolarRad_Whm2d','SnowCover','SnowDepth_cm','Precip_cm')
+#variables_list=c('Streamflow','Tmax_C','Albedo','SnowDepth_cm','SolarRad_Whm2d','Precip_cm')
 
 #Create subset of parleys_data based on list of variables
 sub_data=data[ , which(names(data) %in% variables_list)]

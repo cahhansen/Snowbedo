@@ -1,7 +1,8 @@
 #CreateScenarios-------------------------------------------------------------------------------------------------
 library(hydrostats)
+library(neuralnet)
 #Load Data
-watershed="Lambs"
+watershed="DellCreek"
 load(paste0('Formatted/',watershed,".RData"))
 load(paste0(watershed,'nn.rda'))
 variables_list=c('Streamflow','Tmax_C','Tmin_C','Albedo','SnowCover','SnowDepth_cm','SolarRad_Whm2d','Precip_cm')
