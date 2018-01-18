@@ -4,6 +4,7 @@ library(caret)
 library(ggplot2)
 library(neuralnet)
 
+#Specify the name of the watershed
 watershed='BigCottonwood'
 
 #Read in data with all necessary parameters (and if needed, combine into a single data.frame)
@@ -11,13 +12,11 @@ load(paste0('Formatted/',watershed,'.RData'))
 data=formatteddata
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
-#variables_list=c('Streamflow','Tmax_C','Tmin_C','Albedo','SolarRad_Whm2d','SnowCover','SnowDepth_cm','Precip_cm')
-variables_list=c('Streamflow','Tmax_C','Albedo','SnowDepth_cm','SolarRad_Whm2d','Precip_cm')
+variables_list=c('Streamflow','Tmax_C','Tmin_C','Albedo','SolarRad_Whm2d','SnowCover','SnowDepth_cm','Precip_cm')
+#variables_list=c('Streamflow','Tmax_C','Albedo','SnowDepth_cm','SolarRad_Whm2d','Precip_cm')
 
-#Create subset of parleys_data based on list of variables
+#Create subset of dataset based on list of variables
 sub_data=data[ , which(names(data) %in% variables_list)]
-
-
 
 #Normalize the data
 maxs = apply(sub_data,2,max)
@@ -63,15 +62,16 @@ actualvalues=append(train.r,test.r)
 comparisondf=data.frame(Date=comparisondates,Predicted=comparisonvalues,Actual=actualvalues)
 comparisondf=comparisondf[order(comparisondf$Date),]
 
-
+#Uncomment to view plot of actual vs. predicted
 #with(comparisondf,plot(Actual,Predicted,col='red',main='Actual vs Predicted Streamflow',pch=18,cex=0.7))
 #abline(0,1,lwd=2)
 
+#Plot of actual(gaged) and modeled (Neural Network) streams
 with(comparisondf,plot(x=Date,y=Actual,col=1,type="l",xlab="Date",ylab="Streamflow",ylim=c(0,max(Actual)*1.25)))
 with(comparisondf,lines(x=Date,y=Predicted,col=2))
 legend("topright",c('Actual','Predicted'),lty=c(1,1),lwd=c(1,1),col=c(1,2))
 
 #Save the NN model (can be used to model future scenarios)
-save(nn, file = paste0(watershed,"nn2.rda"))
+save(nn, file = paste0(watershed,"nn.rda"))
 
 
